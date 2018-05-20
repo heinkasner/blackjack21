@@ -1,0 +1,263 @@
+<html>
+	<head>
+		<title>BlackJack21</title>
+		<script src="jquery-3.3.1.min.js" type="text/javascript"></script>
+		<script src="dist/js/bootstrap.min.js" type="text/javascript"></script>
+		<link rel="stylesheet" href="dist/css/bootstrap.min.css" />
+	</head>
+	<body>
+		<div class="container">
+			<div class="row">
+				<div class="lg-col-12 md-col-12 sm-col-12 xs-col-12">
+					<div class="page-header">
+  						<h1>BlackJack<small>21</small></h1>
+					</div>
+					<fieldset>
+						<legend>Game Scores</legend>
+						<p id="pScore"><strong><span class="pName">Player</span>:</strong> 0</p>
+						<p id="dScore"><strong>Dealer:</strong> 0</p>
+						<p id="gameMessage"></p>
+					</fieldset>
+					<br />
+					<fieldset>
+						<legend><span class="pName">Player</span> Game Statistics</legend>
+						<p id="pWins"><strong>Wins:</strong> 0</p>
+						<p id="pLosses"><strong>Losses:</strong> 0</p>
+						<p id="pTies"><strong>Ties:</strong> 0</p>
+					</fieldset>
+					<button id="btnDeal" class="btn btn-primary">Deal Cards</button>
+					<br />
+					<br />
+					<button id="btnHit" class="btn btn-success" disabled>Hit</button>
+					<button id="btnStand" class="btn btn-danger" disabled>Stand</button>
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			$(document).ready(function() {
+				// Player name input
+				var playerName = prompt("Player Name");
+				while(playerName === null)
+				{
+					playerName = prompt("Player Name");
+				}
+				
+				// Display player name
+				$(".pName").html(playerName);
+				
+				// -------------------------------
+				// INITIALIZATIONS
+				// -------------------------------
+
+				var wins = 0;
+				var losses = 0;
+				var ties = 0;
+				var pScore = 0;
+				var dScore = 0;
+
+				var cardValuesArray = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+				var playerCards = new Array();
+				var dealerCards = new Array();
+
+				var playerStand = false;
+				var dealerStand = false;
+
+				// -------------------------------
+				// EVENTS
+				// -------------------------------
+
+				// Deal Button
+				$("#btnDeal").click(function() { 
+					//alert("btnDeal");
+					$("#pScore").html("<strong>"+playerName+":</strong> 0");
+					$("#dScore").html("<strong>Dealer:</strong> 0");
+
+					pScore = 0;
+					dScore = 0;
+
+					playerStand = false;
+					dealerStand = false;
+
+					// initial deal - 2 cards each
+					dealCards(true, 2);
+					dealCards(false, 2);
+
+					calculatePlayerScore();
+					calculateDealerScore();
+
+					$('#btnHit').removeAttr("disabled");
+					$('#btnStand').removeAttr("disabled");
+					$('#btnDeal').attr("disabled", "disabled");
+				});
+
+				// Hit Button
+				$("#btnHit").click(function() { 
+					//alert("btnHit");
+					// deal another card to the player
+					dealCards(true, 1);
+					calculatePlayerScore();
+				});
+
+				// Stand Button
+				$("#btnStand").click(function() {
+					//alert("btnStand");
+					playerStand = true;
+
+					while(!dealerStand)
+					{
+						// dealer hits while dealers core is less than 17
+						if(dScore < 17)
+						{
+							// dealer hit
+							dealCards(false, 1);
+							calculateDealerScore();
+						}
+						else
+						{
+							dealerStand = true;
+						}
+					}
+
+					if(playerStand && dealerStand)
+					{
+					    alert("GameOver Function Call player and dealer stand");
+						GameOver();
+					}
+				});
+
+				// -------------------------------
+				// FUNCTIONS
+				// -------------------------------
+
+				function dealCards(dealToPlayer, numCards) 
+				{
+					
+					if(dealToPlayer) // deal cards to player
+					{
+						for (var p = 0; p < numCards; p++) {
+							pIndex = Math.floor(Math.random() * cardValuesArray.length);
+							playerCards.push(cardValuesArray[pIndex]);
+						}
+					}
+					else // deal cards to dealer
+					{
+						for (var d = 0; d < numCards; d++) {
+							dIndex = Math.floor(Math.random() * cardValuesArray.length);
+							dealerCards.push(cardValuesArray[dIndex]);
+						}
+					}
+					
+				}
+				
+
+				function calculatePlayerScore() 
+				{
+					//alert("calculatePlayerScore");
+					pScore = 0;
+					for(var p = 0; p < playerCards.length; p++)
+					{
+						pScore += playerCards[p];
+					}
+
+					// ace calculation
+					if(playerCards.includes(11))
+					{
+						if(pScore > 21)
+						{
+							pScore -= 10;
+						}
+					}
+					
+					$("#pScore").html("<strong>"+playerName+":</strong> " + pScore);
+
+					if(pScore > 21)
+					{
+						alert(playerName+" Bust! You Lose!");
+						GameOver();
+					}
+					else if(pScore == 21)
+					{
+						alert(playerName+" BlackJack! You Win!");
+						GameOver();
+					}
+				}
+
+				function calculateDealerScore() 
+				{
+					//alert("calculateDealerScore");
+					dScore = 0;
+					for(var d = 0; d < dealerCards.length; d++)
+					{
+						dScore += dealerCards[d];
+					}
+
+					// ace calculation
+					if(dealerCards.includes(11))
+					{
+						if(dScore > 21)
+						{
+							dScore -= 10;
+						}
+					}
+
+					$("#dScore").html("<strong>Dealer:</strong> " + dScore);
+
+					if(dScore > 21)
+					{
+						alert("Dealer Bust! You Win!");
+						GameOver();
+					}
+					else if(dScore == 21)
+					{
+						alert("Dealer BlackJack! You Lose!");
+						GameOver();
+					}
+				}
+
+				function dealerHit() 
+				{
+					dealCards(false, 1);
+					calculateDealerScore();
+				}
+
+				function GameOver()
+				{
+				    // disable hit and stand buttons
+					$('#btnHit').attr("disabled", "disabled");
+					$('#btnStand').attr("disabled", "disabled");
+					$('#btnDeal').removeAttr("disabled");
+				    
+					//alert("GameOver");
+					if(pScore > 21 || ((pScore < dScore) && dScore <= 21))
+					{
+						alert("Game Over! Dealer Wins!");
+						losses++;
+						$("#pLosses").html("<strong>Losses:</strong> " + losses);
+						//$("#gameMessage").html("<span style='color:red;'><b>YOU LOSE!!</b></span>");
+					}
+					else if(pScore == dScore)
+					{
+						alert("Game Over! It\'s A Tie!");
+						ties++;
+						$("#pTies").html("<strong>Ties:</strong> " + ties);
+						//$("#gameMessage").html("<span style='color:red;'><b>ALL PLAYERS TIE!!</b></span>");
+					}
+					else if (dScore > 21 || (pScore > dScore) && pScore <= 21)
+					{
+						alert("Game Over! You Win!");
+						wins++;
+						$("#pWins").html("<strong>Wins:</strong> " + wins);
+						//$("#gameMessage").html("<span style='color:green;'><b>YOU WIN!!</b></span>");
+					}
+
+					// clear game messages
+					$("#gameMessage").html("");
+
+					// remove all dealt cards from arrays
+					playerCards = new Array();
+					dealerCards = new Array();
+				}
+			});
+		</script>
+	</body>
+</html>
